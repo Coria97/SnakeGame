@@ -133,6 +133,7 @@ class Body(pygame.sprite.Sprite):
         super().__init__()
         self.image = pygame.image.load("snake_body_v2.png").convert_alpha()
         self.rect = self.image.get_rect()   
+        self.direction = 4 # 4 = no move; 0 = izq; 1 = abj; 2 = der; 3 = arr;
 
     def setRectX(self,coord):
         self.rect.x = coord
@@ -189,14 +190,60 @@ class Game(object):
         new_part = Body()
         for element in self.body:
             if i == j:
-                new_part.setRectX(element.rect.x)
-                new_part.setRectY(element.rect.y)
+                new_part.direction = element.direction
+                if element.direction == 0:
+                    new_part.setRectX(element.rect.x + 40)
+                    new_part.setRectY(element.rect.y )
+                elif element.direction == 1:
+                    new_part.setRectX(element.rect.x )
+                    new_part.setRectY(element.rect.y - 40)
+                elif element.direction == 2:
+                    new_part.setRectX(element.rect.x - 40)
+                    new_part.setRectY(element.rect.y )
+                else:
+                    new_part.setRectX(element.rect.x )
+                    new_part.setRectY(element.rect.y + 40)
+                
             else: 
                 i += 1
         self.body.add(new_part)   
         self.all_sprite.add(new_part) 
 
+    def updateCoordSnake(self):
+        coord_list = []
+        first_element = True
+        #Obtengo coordenadas de los sprite y borro de el sprite
+        for element in self.body: #self.direction = 4 # 4 = no move; 0 = izq; 1 = abj; 2 = der; 3 = arr;
+            if not first_element:
+                if last_element.direction == 0:
+                    coord_list.append((element.rect.x - SPEED, element.rect.y, 0))
+                elif last_element.direction == 1:
+                    coord_list.append((element.rect.x, element.rect.y + SPEED, 1))
+                elif last_element.direction == 2:
+                    coord_list.append((element.rect.x + SPEED, element.rect.y, 2))
+                else:
+                    coord_list.append((element.rect.x, element.rect.y - SPEED, 3))
+                self.body.remove(element)
+                self.all_sprite.remove(element)
+            last_element = element
+            first_element = False
+        #Generar mi list de Sprites
+        for i in coord_list:
+            body_part = Body()
+            body_part.direction = i[2]
+            body_part.setRectX(i[0])
+            body_part.setRectY(i[1])
+            self.body.add(body_part)
+            self.all_sprite.add(body_part)
+            print("head x", self.head.rect.x)
+            print("head y", self.head.rect.y)
+            print("coord list x", i[0])
+            print("coord list y", i[1])
+            print("body_part x", body_part.rect.x)
+            print("body_part y", body_part.rect.y)
+
     def runLogic(self): 
+        self.updateCoordSnake()
         self.all_sprite.update()
         hit_food = pygame.sprite.spritecollide(self.head, self.food, True)
         if len(hit_food) > 0:
